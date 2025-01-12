@@ -12,7 +12,14 @@ function mainMenu() {
         type: "list",
         name: "action",
         message: "What would you like to do?",
-        choices: ["Create a new post", "View all posts", "Edit Post", "Exit"],
+        choices: [
+          "Create a new post",
+          "View all posts",
+          "View a post by ID",
+          "Edit Post",
+          "Delete Post",
+          "Exit",
+        ],
       },
     ])
     .then((answers) => {
@@ -23,8 +30,14 @@ function mainMenu() {
         case "View all posts":
           viewPosts();
           break;
+        case "View a post by ID":
+          viewPost();
+          break;
         case "Edit Post":
           editPosts();
+          break;
+        case "Delete Post":
+          deletePost();
           break;
         case "Exit":
           console.log(chalk.blue("Goodbye!"));
@@ -82,6 +95,7 @@ function editPosts() {
   });
   if (posts.length === 0) {
     console.log(chalk.yellow("No post to edit"));
+    mainMenu();
   } else {
     let selected = null;
     inquirer
@@ -110,21 +124,90 @@ function editPosts() {
       ])
       .then((answers) => {
         selected = answers.action;
-        const post = {
-          title: answers.title,
-          content: answers.content,
-        };
-        posts[selected - 1] = post
-        console.log(chalk.bgGray(`\nPostId: #${selected} `));
-        console.log(chalk.bgBlue(`Title: ${posts[selected - 1].title} `));
-        console.log(chalk.blue(`Content: ${posts[selected - 1].content}`));
-        console.log(chalk.green("Post updated successfully!"));
+        if (answers.isSave) {
+          const post = {
+            title: answers.title,
+            content: answers.content,
+          };
+          posts[selected - 1] = post;
+          console.log(chalk.bgGray(`\nPostId: #${selected} `));
+          console.log(chalk.bgBlue(`Title: ${posts[selected - 1].title} `));
+          console.log(chalk.blue(`Content: ${posts[selected - 1].content}`));
+          console.log(chalk.green("Post updated successfully!"));
+        } else {
+          console.log(chalk.red("Post update Discarded!"));
+        }
+
         mainMenu();
       });
-    
   }
 }
 
-function updatePost(id) {}
+function deletePost() {
+  let postsIds = [];
+  posts.forEach((_, index) => {
+    postsIds.push(index + 1);
+  });
+  if (posts.length === 0) {
+    console.log(chalk.yellow("No post to delete"));
+    mainMenu();
+  } else {
+    let selected = null;
+    inquirer
+      .prompt([
+        {
+          type: "list",
+          name: "action",
+          message: "Choose which the postId",
+          choices: postsIds,
+        },
+        {
+          type: "confirm",
+          name: "isDelete",
+          message: "This will permanently delete is post. Are you sure?",
+        },
+      ])
+      .then((answers) => {
+        if (answers.isDelete) {
+          selected = answers.action - 1;
+          posts.splice(selected, 1);
+          console.log(chalk.green("Post deleted successfully!"));
+        } else {
+          console.log(chalk.red("Post Delete Action Aborted!"));
+        }
+        mainMenu();
+      });
+  }
+}
+
+function viewPost() {
+  let postsIds = [];
+  posts.forEach((post, index) => {
+    postsIds.push(index + 1);
+  });
+  if (posts.length === 0) {
+    console.log(chalk.yellow("No Posts Available"));
+    mainMenu();
+  } else {
+    let selected = null;
+    inquirer
+      .prompt([
+        {
+          type: "list",
+          name: "action",
+          message: "Choose which the postId you want to view",
+          choices: postsIds,
+        },
+      ])
+      .then((answers) => {
+        selected = answers.action;
+        console.log(chalk.bgGray(`\nPostId: #${selected} `));
+        console.log(chalk.bgBlue(`Title: ${posts[selected - 1].title} `));
+        console.log(chalk.blue(`Content: ${posts[selected - 1].content}`));
+
+        mainMenu();
+      });
+  }
+}
 
 mainMenu();
